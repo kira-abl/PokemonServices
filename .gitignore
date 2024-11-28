@@ -1,0 +1,4 @@
+.terraform/
+.venv/
+.git/
+.idea/
