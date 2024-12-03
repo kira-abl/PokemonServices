@@ -1,0 +1,72 @@
+---
+- name: Setup Docker and Git on EC2
+  hosts: all
+  become: true
+  tasks:
+    - name: Update system
+      yum:
+        name: "*"
+        state: latest
+
+    - name: Install Git
+      yum:
+        name: git
+        state: present
+
+    - name: Install Docker
+      yum:
+        name: docker
+        state: present
+
+    - name: Add ec2-user to docker group
+      user:
+        name: ec2-user
+        group: docker
+        append: yes
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Clone PokemonServices repository
+      git:
+        repo: 'https://github.com/kira-abl/PokemonServices'
+        dest: '/home/ec2-user/pokemon'
+        version: main
+
+    - name: Change ownership of the cloned repository
+      file:
+        path: /home/ec2-user/pokemon
+        owner: ec2-user
+        group: ec2-user
+        recurse: yes
+
+    - name: Download docker-compose binary
+      get_url:
+        url: "https://github.com/docker/compose/releases/latest/download/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'  # Ensures executable permissions
+
+    - name: Change permissions for docker-compose binary
+      file:
+        path: /usr/local/bin/docker-compose
+        mode: '0755'
+
+    - name: Run docker-compose to build and start the containers
+      shell: |
+        cd /home/ec2-user/pokemon
+        sudo docker-compose up -d --build
+        sleep 30 
+        docker-compose ps
+      args:
+        chdir: /home/ec2-user/pokemon
+      register: docker_compose_result
+      failed_when: >
+        'Up' not in docker_compose_result.stdout or
+        'Exited' in docker_compose_result.stdout
+
+    - debug:
+        var: docker_compose_result
+      
