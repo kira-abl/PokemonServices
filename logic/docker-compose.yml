@@ -5,3 +5,5 @@ services:
         ports:
             - "80:5002"
         container_name: logic
+        environment:
+          - CRUD_IP=${CRUD_IP}
