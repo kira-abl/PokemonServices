@@ -56,7 +56,7 @@
 
     - name: Run docker-compose to build and start the containers on the CRUD instance
       shell: |
-        cd /home/ec2-user/pokemon
+        cd /home/ec2-user/pokemon/crud
         sudo docker-compose up -d --build
         sleep 30 
         docker-compose ps
@@ -71,7 +71,7 @@
 
     - name: Run docker-compose to build and start the containers on the Logic API instance
       shell: |
-        cd /home/ec2-user/pokemon
+        cd /home/ec2-user/pokemon/logic
         sudo docker-compose up -d --build
         sleep 30 
         docker-compose ps
@@ -79,7 +79,7 @@
         chdir: /home/ec2-user/pokemon/logic
       register: docker_compose_result_second
       environment:
-        CRUD_IP: "{{ hostvars['crud']['ansible_host'] }}"
+        CRUD_IP: "{{ hostvars['CRUD']['ansible_host'] }}"
       when: inventory_hostname == "logicAPI"
       failed_when: >
         'Up' not in docker_compose_result_second.stdout or

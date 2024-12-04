@@ -26,7 +26,7 @@ resource "null_resource" "key-perm" {
     ]
 
     provisioner "local-exec" {
-        command = "chmod 400 /home/kira/Desktop/${var.key_name}.pem"
+        command = "chmod 600 /home/kira/Desktop/${var.key_name}.pem"
     }
 }
 
