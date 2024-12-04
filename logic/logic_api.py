@@ -40,6 +40,7 @@ def get_pokemon_info_from_api(name):
     return cries, weight, experience
 
 crud_ip= os.getenv("CRUD_IP")
+print("CRUD", crud_ip)
 
 def find_pokemon_in_db(name):
     url = f"http://{crud_ip}/mongodb"

@@ -104,9 +104,12 @@ resource "aws_instance" "logicAPI" {
     echo "[web_servers]" > /tmp/ansible_inventory
     echo "CRUD ansible_host=${aws_instance.CRUD.public_ip}" >> /tmp/ansible_inventory
     echo "logicAPI ansible_host=${aws_instance.logicAPI.public_ip}" >> /tmp/ansible_inventory
+
+     # Log the inventory file to confirm it was created properly
+    cat /tmp/ansible_inventory  # This will output the content to Terraform logs
     
     # Run Docker Compose and pass the first instance IP as an environment variable
-    ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u ec2-user --private-key /home/kira/Desktop/${var.key_name}.pem -i /tmp/ansible_inventory master.yml -e "CRUD_ip=${aws_instance.CRUD.public_ip}"
+    ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u ec2-user --private-key /home/kira/Desktop/${var.key_name}.pem -i /tmp/ansible_inventory master.yml -e "CRUD_IP=${aws_instance.CRUD.public_ip}"
     EOT
   }
   

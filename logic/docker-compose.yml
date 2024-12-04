@@ -3,5 +3,5 @@ services:
     logic:
         build: .
         ports:
-            - "80:5001"
+            - "80:5002"
         container_name: logic
