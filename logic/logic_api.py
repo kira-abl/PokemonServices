@@ -2,6 +2,7 @@ from flask import Flask, request, json, Response
 import logging as log
 import requests
 import json
+import os
 
 log.basicConfig(level=log.DEBUG, format='%(asctime)s %(levelname)s:\n%(message)s\n')
 
@@ -38,15 +39,19 @@ def get_pokemon_info_from_api(name):
     print(cries, weight, experience)
     return cries, weight, experience
 
+crud_ip= os.getenv("CRUD_IP")
+
 def find_pokemon_in_db(name):
-    response = requests.get("http://localhost:5001/mongodb", params={"name": name})
+    url = f"http://{crud_ip}/mongodb"
+    response = requests.get(url, params={"name": name})
     data = response.json()
     print("CRUD returned this:", data)
     return data
 
 def insert_pokemon_into_db(item):
+    url = f"http://{crud_ip}/mongodb"
     response = requests.post(
-        "http://localhost:5001/mongodb",
+        url,
         json=item
     )
     if response.status_code == 200:

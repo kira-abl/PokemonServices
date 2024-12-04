@@ -1,0 +1,7 @@
+version: "3"
+services:
+    logic:
+        build: .
+        ports:
+            - "80:5001"
+        container_name: logic

@@ -1,5 +1,5 @@
 ---
-- name: Setup Docker and Git on EC2
+- name: Setup and configure instances
   hosts: all
   become: true
   tasks:
@@ -54,19 +54,44 @@
         path: /usr/local/bin/docker-compose
         mode: '0755'
 
-    - name: Run docker-compose to build and start the containers
+    - name: Run docker-compose to build and start the containers on the CRUD instance
       shell: |
         cd /home/ec2-user/pokemon
         sudo docker-compose up -d --build
         sleep 30 
         docker-compose ps
       args:
-        chdir: /home/ec2-user/pokemon
-      register: docker_compose_result
+        chdir: /home/ec2-user/pokemon/crud
+      register: docker_compose_result_first
+      when: inventory_hostname == "CRUD"
       failed_when: >
-        'Up' not in docker_compose_result.stdout or
-        'Exited' in docker_compose_result.stdout
+        'Up' not in docker_compose_result_first.stdout or
+        'Exited' in docker_compose_result_first.stdout
 
+
+    - name: Run docker-compose to build and start the containers on the Logic API instance
+      shell: |
+        cd /home/ec2-user/pokemon
+        sudo docker-compose up -d --build
+        sleep 30 
+        docker-compose ps
+      args:
+        chdir: /home/ec2-user/pokemon/logic
+      register: docker_compose_result_second
+      environment:
+        CRUD_IP: "{{ hostvars['crud']['ansible_host'] }}"
+      when: inventory_hostname == "logicAPI"
+      failed_when: >
+        'Up' not in docker_compose_result_second.stdout or
+        'Exited' in docker_compose_result_second.stdout
+
+    # Debug for CRUD
     - debug:
-        var: docker_compose_result
+        var: docker_compose_result_first
+      when: inventory_hostname == "CRUD"
+
+    # Debug for LogicAPI
+    - debug:
+        var: docker_compose_result_second
+      when: inventory_hostname == "logicAPI"
       

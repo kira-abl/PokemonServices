@@ -76,19 +76,45 @@ resource "aws_security_group" "allow_tcp" {
   }
 }
 
-// Launching new EC2 instance
-resource "aws_instance" "myWebOS" {
+// Launching the CRUD instance
+resource "aws_instance" "CRUD" {
     ami = "ami-055e3d4f0bbeb5878"
     instance_type = "t2.micro"
     key_name = var.key_name
     vpc_security_group_ids = ["${aws_security_group.allow_tcp.id}"]
     tags = {
-        Name = "TeraTaskOne"
+        Name = "CRUD_API"
         }
-    depends_on = [module.key_pair] # Ensure key pair is created first
-        provisioner "local-exec" {
-    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u ec2-user --private-key /home/kira/Desktop/${var.key_name}.pem -i '${aws_instance.myWebOS.public_ip},' master.yml"
+    depends_on = [module.key_pair]
+}
+
+// Launching the LogicAPI instance
+resource "aws_instance" "logicAPI" {
+    ami = "ami-055e3d4f0bbeb5878"
+    instance_type = "t2.micro"
+    key_name = var.key_name
+    vpc_security_group_ids = ["${aws_security_group.allow_tcp.id}"]
+    tags = {
+        Name = "logic_API"
+        }
+    depends_on = [module.key_pair, aws_instance.CRUD]
+    provisioner "local-exec" {
+    command = <<EOT
+    # Create a temporary inventory file dynamically
+    echo "[web_servers]" > /tmp/ansible_inventory
+    echo "CRUD ansible_host=${aws_instance.CRUD.public_ip}" >> /tmp/ansible_inventory
+    echo "logicAPI ansible_host=${aws_instance.logicAPI.public_ip}" >> /tmp/ansible_inventory
+    
+    # Run Docker Compose and pass the first instance IP as an environment variable
+    ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u ec2-user --private-key /home/kira/Desktop/${var.key_name}.pem -i /tmp/ansible_inventory master.yml -e "CRUD_ip=${aws_instance.CRUD.public_ip}"
+    EOT
   }
   
 }
+
+
+
+
+
+
 
